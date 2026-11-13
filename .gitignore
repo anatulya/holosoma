@@ -59,3 +59,6 @@ src/holosoma_retargeting/holosoma_retargeting/models/templates/f[a-z][0-9][0-9]o
 formhoi/logs_archive/
 formhoi/data/
 .venv-rt/
+src/holosoma_retargeting/holosoma_retargeting/converted_res_dex/
+src/holosoma/holosoma/data/motions/g1_inspire/
+src/holosoma/holosoma/data/scene_objects/formhoi/

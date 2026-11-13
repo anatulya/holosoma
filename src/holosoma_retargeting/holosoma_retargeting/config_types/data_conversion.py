@@ -40,6 +40,14 @@ _ROBOT_JOINT_NAMES_DEFAULT = {
         "right_wrist_yaw_joint",
     ],
 }
+# G1 + Inspire (models/g1_dex): each arm's 7 joints are followed by that hand's 12.
+_HAND = ["thumb_proximal_yaw", "thumb_proximal_pitch", "thumb_intermediate", "thumb_distal", "index_proximal",
+         "index_intermediate", "middle_proximal", "middle_intermediate", "ring_proximal", "ring_intermediate",
+         "pinky_proximal", "pinky_intermediate"]  # fmt: skip
+_g1 = _ROBOT_JOINT_NAMES_DEFAULT["g1"]
+_ROBOT_JOINT_NAMES_DEFAULT["g1_dex"] = (
+    _g1[:22] + [f"L_{j}_joint" for j in _HAND] + _g1[22:] + [f"R_{j}_joint" for j in _HAND]
+)
 
 
 @dataclass(frozen=True)

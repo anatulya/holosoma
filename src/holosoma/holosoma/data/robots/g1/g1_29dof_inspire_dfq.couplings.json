@@ -1,0 +1,74 @@
+[
+ {
+  "joint": "L_thumb_intermediate_joint",
+  "parent": "L_thumb_proximal_pitch_joint",
+  "multiplier": 1.6,
+  "offset": 0.0
+ },
+ {
+  "joint": "L_thumb_distal_joint",
+  "parent": "L_thumb_proximal_pitch_joint",
+  "multiplier": 2.4,
+  "offset": 0.0
+ },
+ {
+  "joint": "L_index_intermediate_joint",
+  "parent": "L_index_proximal_joint",
+  "multiplier": 1.0,
+  "offset": 0.0
+ },
+ {
+  "joint": "L_middle_intermediate_joint",
+  "parent": "L_middle_proximal_joint",
+  "multiplier": 1.0,
+  "offset": 0.0
+ },
+ {
+  "joint": "L_ring_intermediate_joint",
+  "parent": "L_ring_proximal_joint",
+  "multiplier": 1.0,
+  "offset": 0.0
+ },
+ {
+  "joint": "L_pinky_intermediate_joint",
+  "parent": "L_pinky_proximal_joint",
+  "multiplier": 1.0,
+  "offset": 0.0
+ },
+ {
+  "joint": "R_thumb_intermediate_joint",
+  "parent": "R_thumb_proximal_pitch_joint",
+  "multiplier": 1.6,
+  "offset": 0.0
+ },
+ {
+  "joint": "R_thumb_distal_joint",
+  "parent": "R_thumb_proximal_pitch_joint",
+  "multiplier": 2.4,
+  "offset": 0.0
+ },
+ {
+  "joint": "R_index_intermediate_joint",
+  "parent": "R_index_proximal_joint",
+  "multiplier": 1.0,
+  "offset": 0.0
+ },
+ {
+  "joint": "R_middle_intermediate_joint",
+  "parent": "R_middle_proximal_joint",
+  "multiplier": 1.0,
+  "offset": 0.0
+ },
+ {
+  "joint": "R_ring_intermediate_joint",
+  "parent": "R_ring_proximal_joint",
+  "multiplier": 1.0,
+  "offset": 0.0
+ },
+ {
+  "joint": "R_pinky_intermediate_joint",
+  "parent": "R_pinky_proximal_joint",
+  "multiplier": 1.0,
+  "offset": 0.0
+ }
+]
