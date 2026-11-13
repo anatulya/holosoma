@@ -152,8 +152,8 @@ def validate_config(cfg: RetargetingConfig) -> None:
     # Task-specific format requirements
     if cfg.task_type == "climbing" and cfg.data_format not in (None, "mocap"):
         raise ValueError("Climbing task requires 'mocap' data format")
-    if cfg.task_type == "object_interaction" and cfg.data_format not in (None, "smplh"):
-        raise ValueError("Object interaction requires 'smplh' data format")
+    if cfg.task_type == "object_interaction" and cfg.data_format not in (None, "smplh", "smplh_dex"):
+        raise ValueError("Object interaction requires 'smplh' (or 'smplh_dex') data format")
     # robot_only accepts any format in the registry (already validated above)
 
 
@@ -259,6 +259,11 @@ def load_motion_data(
             raise FileNotFoundError(f"InterMimic data file not found: {pt_path}")
 
         human_joints, object_poses = load_intermimic_data(str(pt_path))
+        if data_format == "smplh_dex":  # + 10 fingertips after the object pose (cols 325:355)
+            import torch
+
+            tips = torch.load(str(pt_path), map_location="cpu").numpy()[:, 325:355].reshape(-1, 10, 3)
+            human_joints = np.concatenate([human_joints, tips], axis=1)
         smpl_scale = calculate_scale_factor(task_name, constants.ROBOT_HEIGHT)
 
     elif task_type == "climbing":

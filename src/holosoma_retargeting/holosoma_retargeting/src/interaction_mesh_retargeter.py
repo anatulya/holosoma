@@ -170,6 +170,21 @@ class InteractionMeshRetargeter:
             self.task_constants.MANUAL_COST.values()
         )
 
+        # Joint couplings (MuJoCo joint equalities, e.g. Inspire finger mimic
+        # joints: q_child = c0 + c1 q_parent), enforced as linear equalities on
+        # the step in the QP. Only couplings between optimized joints.
+        qa_pos = {int(qi): k for k, qi in enumerate(self.q_a_indices)}
+        self.joint_couplings = []
+        for e in range(self.robot_model.neq):
+            if self.robot_model.eq_type[e] != mujoco.mjtEq.mjEQ_JOINT:
+                continue
+            j1, j2 = self.robot_model.eq_obj1id[e], self.robot_model.eq_obj2id[e]
+            c, p = qa_pos.get(int(self.robot_model.jnt_qposadr[j1])), qa_pos.get(int(self.robot_model.jnt_qposadr[j2]))
+            if c is None or p is None:
+                continue
+            c0, c1 = self.robot_model.eq_data[e, 0], self.robot_model.eq_data[e, 1]
+            self.joint_couplings.append((c, p, float(c0), float(c1)))
+
         self.w_nominal_tracking_init = w_nominal_tracking_init
         self.nominal_tracking_tau = nominal_tracking_tau
         self.track_nominal_indices = task_constants.NOMINAL_TRACKING_INDICES
@@ -720,6 +735,10 @@ class InteractionMeshRetargeter:
                 dqa >= (self.q_a_lb - q_a_n_last),
                 dqa <= (self.q_a_ub - q_a_n_last),
             ]
+
+        # Joint couplings: (q_c + dq_c) = c0 + c1 (q_p + dq_p)
+        for c, p, c0, c1 in self.joint_couplings:
+            constraints += [dqa[c] - c1 * dqa[p] == c0 + c1 * q_a_n_last[p] - q_a_n_last[c]]
 
         # Step size constraints (Lorentz cone)
         constraints += [cp.SOC(self.step_size, dqa)]

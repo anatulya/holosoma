@@ -92,6 +92,12 @@ SMPLH_DEMO_JOINTS = [
     "R_Thumb3",
 ]
 
+# SMPL-H + fingertips (FORM-HOI dexterous extension). SMPL-H's finger joints
+# are the knuckles (Index1 = MCP, 2 = PIP, 3 = DIP); the tips come from the SOMA
+# skeleton's *End joints, stored in the .pt after the object pose (cols 325:355).
+FINGERTIP_JOINTS = [f"{s}_{f}_tip" for s in ("L", "R") for f in ("Thumb", "Index", "Middle", "Ring", "Pinky")]
+SMPLH_DEX_DEMO_JOINTS = SMPLH_DEMO_JOINTS + FINGERTIP_JOINTS
+
 MOCAP_DEMO_JOINTS = [
     "Hips",
     "Spine",
@@ -296,10 +302,34 @@ JOINTS_MAPPINGS = {
     },
 }
 
+# smplh_dex -> g1_dex (our G1 + Inspire): their smplh/g1 body pairs, the
+# wrist on the wrist link (no rubber hand; as in our own retarget), and the
+# fingers as our FORM-HOI pipeline pairs them (motion/g1_soma_correspondence):
+# thumb 1-3 + tip; other fingers MCP, PIP + tip.
+def _g1_dex_fingers() -> dict[str, str]:
+    m = {}
+    for s in ("L", "R"):
+        m |= {f"{s}_Thumb1": f"{s}_thumb_proximal_base", f"{s}_Thumb2": f"{s}_thumb_proximal",
+              f"{s}_Thumb3": f"{s}_thumb_intermediate", f"{s}_Thumb_tip": f"{s}_thumb_tip"}
+        for f in ("Index", "Middle", "Ring", "Pinky"):
+            low = f.lower()
+            m |= {f"{s}_{f}1": f"{s}_{low}_proximal", f"{s}_{f}2": f"{s}_{low}_intermediate",
+                  f"{s}_{f}_tip": f"{s}_{low}_tip"}
+    return m
+
+
+JOINTS_MAPPINGS[("smplh_dex", "g1_dex")] = {
+    **{k: v for k, v in JOINTS_MAPPINGS[("smplh", "g1")].items() if k not in ("L_Wrist", "R_Wrist")},
+    "L_Wrist": "left_wrist_yaw_link",
+    "R_Wrist": "right_wrist_yaw_link",
+    **_g1_dex_fingers(),
+}
+
 # Data format specific constants
 TOE_NAMES_BY_FORMAT = {
     "lafan": ["LeftToeBase", "RightToeBase"],
     "smplh": ["L_Toe", "R_Toe"],
+    "smplh_dex": ["L_Toe", "R_Toe"],
     "mocap": ["LeftToeBase", "RightToeBase"],
     "smplx": ["L_Foot", "R_Foot"],
 }
@@ -326,6 +356,7 @@ DATA_FORMAT_CONSTANTS: dict[str, FormatConstants] = {
 DEMO_JOINTS_REGISTRY: dict[str, list[str]] = {
     "lafan": LAFAN_DEMO_JOINTS,
     "smplh": SMPLH_DEMO_JOINTS,
+    "smplh_dex": SMPLH_DEX_DEMO_JOINTS,
     "mocap": MOCAP_DEMO_JOINTS,
     "smplx": SMPLX_DEMO_JOINTS,
 }

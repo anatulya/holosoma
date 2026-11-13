@@ -18,8 +18,16 @@ class RobotDefaults(TypedDict):
 
 _ROBOT_DEFAULTS: dict[str, RobotDefaults] = {
     "g1": {"robot_dof": 29, "robot_height": 1.32, "object_name": "ground"},
+    # G1 + Inspire DFQ hands (our training robot): 29 body + 2 x 12 finger joints,
+    # left fingers right after the left arm in qpos (FORM-HOI dexterous extension).
+    "g1_dex": {"robot_dof": 53, "robot_height": 1.32, "object_name": "ground"},
     "t1": {"robot_dof": 23, "robot_height": 1.2, "object_name": "ground"},
 }
+
+
+# g1 qpos index -> g1_dex qpos index for the hand-tuned bounds (right elbow and
+# wrist: after the 12 left finger joints).
+_G1_DEX_QPOS = {"32": "44", "33": "45", "34": "46", "35": "47"}
 
 
 def _default_robot_defaults() -> dict[str, RobotDefaults]:
@@ -131,7 +139,7 @@ class RobotConfig:
         if self.foot_sticking_links is not None:
             return self.foot_sticking_links
 
-        if self.robot_type == "g1":
+        if self.robot_type in ("g1", "g1_dex"):
             return [
                 "left_ankle_roll_sphere_1_link",
                 "right_ankle_roll_sphere_1_link",
@@ -169,7 +177,7 @@ class RobotConfig:
 
         base: dict[str, float] = {"3": -1.0, "4": -1.0, "5": -1.0, "6": -1.0}  # quaternion bounds
 
-        if self.robot_type == "g1":
+        if self.robot_type in ("g1", "g1_dex"):
             base.update(
                 {
                     "20": -0.3,  # waist roll
@@ -183,6 +191,8 @@ class RobotConfig:
                 }
             )
 
+        if self.robot_type == "g1_dex":
+            base = {_G1_DEX_QPOS.get(k, k): v for k, v in base.items()}
         return base
 
     MANUAL_LB = property(_manual_lb, doc="Get manual lower bounds.")
@@ -194,7 +204,7 @@ class RobotConfig:
 
         base: dict[str, float] = {"3": 1.0, "4": 1.0, "5": 1.0, "6": 1.0}  # quaternion bounds
 
-        if self.robot_type == "g1":
+        if self.robot_type in ("g1", "g1_dex"):
             base.update(
                 {
                     "20": 0.3,  # waist roll
@@ -209,6 +219,8 @@ class RobotConfig:
                 }
             )
 
+        if self.robot_type == "g1_dex":
+            base = {_G1_DEX_QPOS.get(k, k): v for k, v in base.items()}
         return base
 
     MANUAL_UB = property(_manual_ub, doc="Get manual upper bounds.")
@@ -218,7 +230,7 @@ class RobotConfig:
         if self.manual_cost is not None:
             return self.manual_cost
 
-        if self.robot_type == "g1":
+        if self.robot_type in ("g1", "g1_dex"):
             return {"19": 0.2, "20": 0.2}  # waist yaw, waist roll
         return {}
 
@@ -229,7 +241,7 @@ class RobotConfig:
         if self.nominal_tracking_indices is not None:
             return self.nominal_tracking_indices
 
-        if self.robot_type == "g1":
+        if self.robot_type in ("g1", "g1_dex"):
             return np.arange(19)
         if self.robot_type == "t1":
             return np.concatenate([np.arange(7), np.arange(11, 23)])

@@ -47,3 +47,15 @@ wandb-metadata.json
 
 # BAZEL build artifacts
 BUILD.bazel
+
+# FORM-HOI data (distributed separately, see formhoi/README.md)
+src/holosoma_retargeting/holosoma_retargeting/demo_data/FORMHOI/
+src/holosoma_retargeting/holosoma_retargeting/demo_results/
+src/holosoma_retargeting/holosoma_retargeting/converted_res/
+src/holosoma_retargeting/holosoma_retargeting/models/f[a-z][0-9][0-9]obj/
+src/holosoma_retargeting/holosoma_retargeting/models/g1/g1_29dof_w_f[a-z][0-9][0-9]obj.xml
+src/holosoma_retargeting/holosoma_retargeting/models/g1_dex/
+src/holosoma_retargeting/holosoma_retargeting/models/templates/f[a-z][0-9][0-9]obj.urdf.jinja
+formhoi/logs_archive/
+formhoi/data/
+.venv-rt/
