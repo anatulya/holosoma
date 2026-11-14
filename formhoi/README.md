@@ -20,6 +20,13 @@ the same robot.
 
    Extra arguments go straight to `holosoma/train_agent.py`.
 
+   One policy per object over all its clips (as our mjlab runs), e.g. the 10 box clips
+   (`formhoi_box10_rl_data.tar.gz`, see `formhoi/box10_MANIFEST.md`):
+
+       formhoi/train_dex_object.sh box10 holosoma/data/motions/g1_inspire/formhoi_box10 \
+         holosoma/data/scene_objects/formhoi/giant_cardboard_box/giant_cardboard_box.urdf \
+         logger:wandb --training.num-envs=4096
+
 ### What `g1_inspire_wbt_w_object` changes from `g1_29dof_wbt_w_object`
 
 Everything holosoma trains with stays: PPO settings, rewards, observations, terminations,
