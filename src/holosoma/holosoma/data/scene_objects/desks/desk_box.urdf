@@ -1,0 +1,22 @@
+<?xml version="1.0" ?>
+<!-- Support desk for the giant cardboard box clips: a 2 cm slab whose link origin is its top face's
+     center, 2 x 0.459 m square (the box's footprint diagonal + 10 cm each side, as our mjlab support
+     table). Spawned fixed (kinematic) and placed per motion by WBT's support_object_name. -->
+<robot name="desk_box">
+  <link name="desk_box_link">
+    <inertial>
+      <mass value="10.0"/>
+      <origin xyz="0 0 -0.01"/>
+      <inertia ixx="0.7" ixy="0" ixz="0" iyy="0.7" iyz="0" izz="1.4"/>
+    </inertial>
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 -0.01"/>
+      <geometry><box size="0.918 0.918 0.02"/></geometry>
+      <material name="wood"><color rgba="0.55 0.4 0.28 1"/></material>
+    </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 -0.01"/>
+      <geometry><box size="0.918 0.918 0.02"/></geometry>
+    </collision>
+  </link>
+</robot>

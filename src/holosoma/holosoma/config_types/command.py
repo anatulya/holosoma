@@ -99,6 +99,11 @@ class MotionConfig:
     """Directory or glob (or a comma-separated mix) of .npz motion files.
     When non-empty, takes precedence over motion_file."""
 
+    support_object_name: str = ""
+    """Name of a static (``fixed``) scene rigid object placed at each reset at the motion file's
+    ``support_pos``/``support_quat_w`` (e.g. a desk the object starts or ends on), and parked far
+    below for motions without one. Empty: no support."""
+
     # motion sampling related
     use_adaptive_timesteps_sampler: bool = False
     """During training, whether to prioritize training on motion segments where the robot fails often."""

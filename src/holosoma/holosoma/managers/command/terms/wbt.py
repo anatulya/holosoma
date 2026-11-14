@@ -152,6 +152,14 @@ class MotionLoader:
                 self._object_pos_w = torch.zeros(0, 3, device=device)
                 self._object_quat_w = torch.zeros(0, 4, device=device)
                 self._object_lin_vel_w = torch.zeros(0, 3, device=device)
+            # Optional static support (a desk the object rests on) for this motion: its top face's
+            # center ``support_pos`` (world, as object_pos_w), ``support_quat_w`` (wxyz); none: inactive.
+            self.has_support = "support_pos" in data
+            sup_pos = data["support_pos"] if self.has_support else np.zeros(3, dtype=np.float32)
+            sup_quat = data["support_quat_w"] if self.has_support else np.array([1.0, 0.0, 0.0, 0.0], dtype=np.float32)
+            self._support_pos = torch.tensor(sup_pos, dtype=torch.float32, device=device).reshape(1, 3)
+            self._support_quat = torch.tensor(sup_quat, dtype=torch.float32, device=device).reshape(1, 4)[:, [1, 2, 3, 0]]
+            self._support_active = torch.tensor([self.has_support], dtype=torch.bool, device=device)
         return body_names, joint_names
 
     @property
@@ -193,6 +201,21 @@ class MotionLoader:
     @property
     def num_motions(self) -> int:
         return 1
+
+    @property
+    def support_pos(self) -> torch.Tensor:
+        """(num_motions, 3) support top-face center per motion (zeros when inactive)."""
+        return self._support_pos
+
+    @property
+    def support_quat(self) -> torch.Tensor:
+        """(num_motions, 4) support orientation per motion, xyzw."""
+        return self._support_quat
+
+    @property
+    def support_active(self) -> torch.Tensor:
+        """(num_motions,) whether each motion has a support."""
+        return self._support_active
 
     @property
     def motion_start_idx(self) -> torch.Tensor:
@@ -312,11 +335,28 @@ class MultiMotionLoader:
             self._object_quat_w = torch.zeros(0, 4, device=device)
             self._object_lin_vel_w = torch.zeros(0, 3, device=device)
 
-        logger.info(f"MultiMotionLoader: {self._num_motions} motions, {self.time_step_total} total frames")
+        self._support_pos = torch.cat([ld._support_pos for ld in loaders], dim=0)
+        self._support_quat = torch.cat([ld._support_quat for ld in loaders], dim=0)
+        self._support_active = torch.cat([ld._support_active for ld in loaders], dim=0)
+
+        logger.info(f"MultiMotionLoader: {self._num_motions} motions, {self.time_step_total} total frames"
+                    f" ({int(self._support_active.sum())} with a support)")
 
     @property
     def num_motions(self) -> int:
         return self._num_motions
+
+    @property
+    def support_pos(self) -> torch.Tensor:
+        return self._support_pos
+
+    @property
+    def support_quat(self) -> torch.Tensor:
+        return self._support_quat
+
+    @property
+    def support_active(self) -> torch.Tensor:
+        return self._support_active
 
     @property
     def motion_start_idx(self) -> torch.Tensor:
@@ -790,6 +830,22 @@ class MotionCommand(CommandTermBase):
             )  # (num_envs, 13): pos(3) + quat(4) + lin_vel(3) + ang_vel(3)
             # 4.3 set the object states in simulator
             self._env.simulator.set_actor_states([self.object_name], env_ids, object_states)
+
+        # 5. Static support (motion_config.support_object_name, a kinematic slab whose origin is its
+        # top face's center) at this env's motion's support pose; parked 10 m below when it has none.
+        support_name = self.motion_cfg.support_object_name
+        if support_name:
+            motion_ids = self.motion_ids[env_ids]
+            origins = self._env.simulator.scene.env_origins[env_ids]
+            active = self.motion.support_active[motion_ids]
+            pos = torch.where(
+                active[:, None],
+                self.motion.support_pos[motion_ids] + origins,
+                origins + torch.tensor([0.0, 0.0, -10.0], device=self.device),
+            )
+            quat = self.motion.support_quat[motion_ids]
+            support_states = torch.cat([pos, quat, torch.zeros(len(env_ids), 6, device=self.device)], dim=-1)
+            self._env.simulator.set_actor_states([support_name], env_ids, support_states)
 
     def step(self) -> None:
         """Advance the clip once per control frame, after rewards and resets and before observations."""

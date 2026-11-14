@@ -21,6 +21,7 @@ from pathlib import Path
 from holosoma.config_types.action import ActionManagerCfg, ActionTermCfg
 from holosoma.config_types.command import CommandManagerCfg
 from holosoma.config_types.scene import RigidObjectConfig
+from holosoma.config_types.termination import TerminationManagerCfg
 from holosoma.config_values import robot as robot_values
 from holosoma.config_values.wbt.g1 import command as g1_command
 from holosoma.config_values.wbt.g1.experiment import g1_29dof_wbt_w_object
@@ -131,6 +132,14 @@ def _with_motion_config(cfg: CommandManagerCfg) -> CommandManagerCfg:
     )
 
 
+def _with_tracked_bodies(cfg: TerminationManagerCfg) -> TerminationManagerCfg:
+    """bad_tracking asserts its body_names_to_track equal the motion command's: use the Inspire
+    list (holosoma's 14 + the distal finger links) there too."""
+    term = cfg.terms["bad_tracking"]
+    params = {**term.params, "body_names_to_track": list(motion_config_inspire.body_names_to_track)}
+    return replace(cfg, terms={**cfg.terms, "bad_tracking": replace(term, params=params)})
+
+
 g1_inspire_wbt_w_object = replace(
     g1_29dof_wbt_w_object,
     training=replace(g1_29dof_wbt_w_object.training, name="g1_inspire_wbt_w_object"),
@@ -141,10 +150,43 @@ g1_inspire_wbt_w_object = replace(
     ),
     action=g1_inspire_joint_pos,
     command=_with_motion_config(g1_29dof_wbt_w_object.command),
+    termination=_with_tracked_bodies(g1_29dof_wbt_w_object.termination),
     scene=replace(
         g1_29dof_wbt_w_object.scene,
         rigid_objects={"object": RigidObjectConfig(urdf_file="holosoma/data/scene_objects/boxes/large_box.urdf")},
     ),
 )
 
-__all__ = ["g1_29dof_inspire_dfq_w_object", "g1_inspire_joint_pos", "g1_inspire_wbt_w_object"]
+
+
+def _with_support(cfg: CommandManagerCfg, name: str) -> CommandManagerCfg:
+    term = cfg.setup_terms["motion_command"]
+    motion_config = replace(term.params["motion_config"], support_object_name=name)
+    return replace(
+        cfg,
+        setup_terms={
+            **cfg.setup_terms,
+            "motion_command": replace(term, params={**term.params, "motion_config": motion_config}),
+        },
+    )
+
+
+# + a static desk ("desk"), placed per motion at its support pose (motion files' support_pos /
+# support_quat_w; parked far below for motions without one), for clips that start or end with the
+# object on a desk.
+g1_inspire_wbt_w_object_desk = replace(
+    g1_inspire_wbt_w_object,
+    training=replace(g1_inspire_wbt_w_object.training, name="g1_inspire_wbt_w_object_desk"),
+    command=_with_support(g1_inspire_wbt_w_object.command, "desk"),
+    scene=replace(
+        g1_inspire_wbt_w_object.scene,
+        rigid_objects={
+            **g1_inspire_wbt_w_object.scene.rigid_objects,
+            "desk": RigidObjectConfig(
+                urdf_file="holosoma/data/scene_objects/desks/desk_box.urdf", fixed=True, position=[0.0, 0.0, -10.0]
+            ),
+        },
+    ),
+)
+
+__all__ = ["g1_29dof_inspire_dfq_w_object", "g1_inspire_joint_pos", "g1_inspire_wbt_w_object", "g1_inspire_wbt_w_object_desk"]

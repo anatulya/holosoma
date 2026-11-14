@@ -8,6 +8,8 @@
 #          logger:wandb --training.num-envs=4096
 #
 # Paths are relative to src/holosoma. Every clip in <motion dir> must use the same object.
+# EXP (default g1-inspire-wbt-w-object-desk) adds a per-motion desk for clips whose motion file
+# carries support_pos (parked out of the way otherwise); EXP=g1-inspire-wbt-w-object: no desk.
 # Run from an environment set up by scripts/setup_isaacsim.sh.
 set -eu
 REPO=$(cd "$(dirname "$0")/.." && pwd)
@@ -16,7 +18,7 @@ cd "$REPO/src/holosoma"
 [ -n "$(ls $motion_dir/*.npz 2>/dev/null)" ] || { echo "no .npz in $motion_dir (from $PWD)" >&2; exit 1; }
 [ -f "$object" ] || { echo "no $object (from $PWD)" >&2; exit 1; }
 exec python holosoma/train_agent.py \
-  exp:g1-inspire-wbt-w-object \
+  exp:${EXP:-g1-inspire-wbt-w-object-desk} \
   --training.name "g1_inspire_wbt_$name" \
   --command.setup_terms.motion_command.params.motion_config.motion_dir="$motion_dir" \
   --scene.rigid-objects.object.urdf-file "$object" \
